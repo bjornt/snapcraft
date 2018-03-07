@@ -232,14 +232,14 @@ class ProjectOptions:
             logger.debug('Running on {!r}'.format(codename))
 
         # TODO support more bases
-        return codename == 'xenial' or codename == 'trusty'
+        return codename in ['bionic', 'xenial', 'trusty']
 
-    def get_core_dynamic_linker(self):
+    def get_core_dynamic_linker(self, base):
         """Returns the dynamic linker used for the targeted core.
         If not found realpath for `/lib/ld-linux.so.2` is returned.
         However if core is not installed None will be returned.
         """
-        core_path = common.get_core_path()
+        core_path = common.get_core_path(base)
         dynamic_linker_path = os.path.join(
             core_path,
             self.__machine_info.get('core-dynamic-linker',

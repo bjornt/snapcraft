@@ -171,7 +171,7 @@ class TestCase(testscenarios.WithScenarios, testtools.TestCase):
 
     def load_part(self, part_name, plugin_name=None, part_properties=None,
                   project_options=None, stage_packages_repo=None,
-                  confinement='strict'):
+                  confinement='strict', base='core'):
         if not plugin_name:
             plugin_name = 'nil'
         properties = {'plugin': plugin_name}
@@ -209,7 +209,8 @@ class TestCase(testscenarios.WithScenarios, testtools.TestCase):
             stage_packages_repo=stage_packages_repo,
             snap_base_path='/snap/fake-name/current',
             confinement=confinement,
-            soname_cache=elf.SonameCache())
+            soname_cache=elf.SonameCache(),
+            base=base)
 
 
 class TestWithFakeRemoteParts(TestCase):

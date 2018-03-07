@@ -74,7 +74,7 @@ def execute(step, project_options, part_names=None):
             states.GlobalState(installed_packages, installed_snaps)))
 
     if _should_get_core(config.data['confinement']):
-        _setup_core(project_options.deb_arch)
+        _setup_core(project_options.deb_arch, config.data.get('base', 'core'))
 
     _Executor(config, project_options).run(step, part_names)
 
@@ -84,8 +84,8 @@ def execute(step, project_options, part_names=None):
             'type': config.data.get('type', '')}
 
 
-def _setup_core(deb_arch):
-    core_path = common.get_core_path()
+def _setup_core(deb_arch, base):
+    core_path = common.get_core_path(base)
     if os.path.exists(core_path) and os.listdir(core_path):
         logger.debug('{!r} already exists, skipping core setup'.format(
             core_path))
@@ -101,8 +101,8 @@ def _setup_core(deb_arch):
         current_hash = ''
 
     with TemporaryDirectory() as d:
-        download_path = os.path.join(d, 'core.snap')
-        download_hash = snapcraft.download('core', 'stable', download_path,
+        download_path = os.path.join(d, '{}.snap'.format(base))
+        download_hash = snapcraft.download(base, 'stable', download_path,
                                            deb_arch, except_hash=current_hash)
         if download_hash != current_hash:
             snap_cache.cache(snap_filename=download_path)

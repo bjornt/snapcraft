@@ -58,7 +58,7 @@ class PluginHandler:
     def __init__(self, *, plugin, part_properties, project_options,
                  part_schema, definitions_schema, stage_packages_repo,
                  grammar_processor, snap_base_path, confinement,
-                 soname_cache):
+                 soname_cache, base):
         self.valid = False
         self.plugin = plugin
         self._part_properties = _expand_part_properties(
@@ -68,6 +68,7 @@ class PluginHandler:
         self._grammar_processor = grammar_processor
         self._snap_base_path = snap_base_path
         self._confinement = confinement
+        self._base = base
         self._soname_cache = soname_cache
         self._source = grammar_processor.get_source()
         if not self._source:
@@ -513,7 +514,7 @@ class PluginHandler:
         elf_files = elf.get_elf_files(self.primedir, snap_files)
         all_dependencies = set()
         # TODO: base snap support
-        core_path = common.get_core_path()
+        core_path = common.get_core_path(self._base)
 
         # Clear the cache of all libs that aren't already in the primedir
         self._soname_cache.reset_except_root(self.primedir)
@@ -539,9 +540,14 @@ class PluginHandler:
         # base may not be installed so we cannot depend on
         # get_core_dynamic_linker to resolve the final path for which
         # we resort to our only working base 16, ld-2.23.so.
+        linker = self._project_options.get_core_dynamic_linker(self._base)
+        if linker is None:
+            linker = 'ld-2.23.so'
+        else:
+            linker = os.path.basename(linker)
         linker_incompat = dict()  # type: Dict[str, str]
         for elf_file in elf_files:
-            if not elf_file.is_linker_compatible(linker='ld-2.23.so'):
+            if not elf_file.is_linker_compatible(linker=linker):
                 linker_incompat[elf_file.path] = elf_file.get_required_glibc()
         # If libc6 is staged, to avoid symbol mixups we will resort to
         # glibc mangling.
